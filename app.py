@@ -16,7 +16,7 @@ def query_groq(prompt):
         "Content-Type": "application/json"
     }
     payload = {
-        "model": "llama3-70b-8192",  # best available as of now
+        "model": "llama3-70b-8192",
         "messages": [
             {"role": "system", "content": "You are a professional dietitian."},
             {"role": "user", "content": prompt}
@@ -35,11 +35,12 @@ def query_groq(prompt):
 class PDF(FPDF):
     def __init__(self):
         super().__init__()
+        # Regular font
         self.add_font('DejaVu', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
         self.set_font('DejaVu', '', 12)
 
     def header(self):
-        self.set_font('DejaVu', 'B', 16)
+        self.set_font('DejaVu', '', 16)  # Use regular font (no 'B')
         self.cell(0, 10, 'AI-Generated Diet Plan', 0, 1, 'C')
         self.ln(10)
 
