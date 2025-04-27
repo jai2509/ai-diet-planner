@@ -6,25 +6,30 @@ from fpdf import FPDF
 
 # Load environment variables
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Helper Functions
-def query_gemini(prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
-    headers = {"Content-Type": "application/json"}
+def query_groq(prompt):
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
     payload = {
-        "contents": [{
-            "role": "user",
-            "parts": [{"text": prompt}]
-        }]
+        "model": "llama3-70b-8192",  # best available as of now
+        "messages": [
+            {"role": "system", "content": "You are a professional dietitian."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7
     }
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=20)
         response.raise_for_status()
         data = response.json()
-        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        return data["choices"][0]["message"]["content"].strip()
     except Exception as e:
-        return f"Error from Gemini API: {e}"
+        return f"Error from GROQ API: {e}"
 
 # Custom UTF-8 Supported PDF
 class PDF(FPDF):
@@ -72,18 +77,18 @@ if submit:
             f"who weighs {weight}kg and is {height}cm tall. Their goal is {goal.lower()}.\n\n"
             f"Structure:\n"
             f"- Breakfast\n- Mid-morning Snack\n- Lunch\n- Evening Snack\n- Dinner\n- Hydration Tips\n\n"
-            f"Make it simple, practical, and balanced."
+            f"Make it simple, practical, and easy to follow."
         )
 
-        gemini_diet = query_gemini(prompt)
+        groq_diet = query_groq(prompt)
 
-        if "Error" in gemini_diet:
-            st.error(gemini_diet)
+        if "Error" in groq_diet:
+            st.error(groq_diet)
         else:
             st.markdown("## 🥗 Your AI-Generated Diet Plan:")
-            st.markdown(gemini_diet)
+            st.markdown(groq_diet)
 
-            pdf_filename = generate_pdf(gemini_diet)
+            pdf_filename = generate_pdf(groq_diet)
 
             with open(pdf_filename, "rb") as file:
                 st.download_button(
